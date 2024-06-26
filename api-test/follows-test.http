@@ -1,0 +1,34 @@
+### 사용자 follow
+POST http://localhost:8080/api/follows/1
+Authorization: {{Authorization}}}
+Content-Type: application/json
+
+
+### 사용자 follow
+DELETE http://localhost:8080/api/follows/1
+Authorization: {{Authorization}}}
+
+
+### 팔로잉 목록 조회
+GET http://localhost:8080/api/follows/followings
+Authorization: {{Authorization}}}
+
+
+### 팔로워 목록 조회
+GET http://localhost:8080/api/follows/followers
+Authorization: {{Authorization}}}
+
+
+### 관리자 - 팔로우 취소
+DELETE http://localhost:8080/api/follows/2/1
+Authorization: {{Authorization}}}
+
+
+### 관리자 - 해당 사용자의 팔로잉 목록 조회
+GET http://localhost:8080/api/follows/2/follower
+Authorization: {{Authorization}}}
+
+
+### 관리자 - 해당 사용자의 팔로워 목록 조회
+GET http://localhost:8080/api/follows/2/following
+Authorization: {{Authorization}}}

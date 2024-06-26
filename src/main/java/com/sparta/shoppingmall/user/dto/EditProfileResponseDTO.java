@@ -9,21 +9,19 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Getter
-@Builder
-@AllArgsConstructor
 public class EditProfileResponseDTO {
 
-    private Long id;
+    private final Long id;
 
-    private String username;
+    private final String username;
 
-    private String email;
+    private final String email;
 
-    private String address;
+    private final String address;
 
-    private LocalDateTime createAt;
+    private final LocalDateTime createAt;
 
-    private LocalDateTime updateAt;
+    private final LocalDateTime updateAt;
 
 
     public EditProfileResponseDTO(User user) {

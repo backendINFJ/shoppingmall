@@ -1,0 +1,20 @@
+### 상품 좋아요 토글
+POST http://localhost:8080/api/products/2/like
+Authorization: {{Authorization}}
+Content-Type: application/json
+
+{
+  "contentType": "PRODUCT",
+  "contentId": 2
+}
+
+
+### 댓글 좋아요 토글
+POST http://localhost:8080/api/comments/2/like
+Authorization: {{Authorization}}
+Content-Type: application/json
+
+{
+  "contentType": "COMMENT",
+  "contentId": 2
+}

@@ -1,0 +1,51 @@
+### 상품 등록 -> ok
+POST http://localhost:8080/api/products
+Authorization: {{Authorization}}
+Content-Type: application/json
+
+{
+  "name": "경민의데탑",
+  "price": "500000"
+}
+
+### 상품 등록 -> ok
+POST http://localhost:8080/api/products
+Authorization: {{Authorization}}
+Content-Type: application/json
+
+{
+  "name": "밤비의츄르",
+  "price": "3000"
+}
+
+### 상품 등록 -> ok
+POST http://localhost:8080/api/products
+Authorization: {{Authorization}}
+Content-Type: application/json
+
+{
+  "name": "윤재의커피",
+  "price": "50000"
+}
+
+### 전체 상품 조회 -> ok
+GET http://localhost:8080/api/products?page=1
+
+
+### 상품 단일 조회 -> ok
+GET http://localhost:8080/api/products/2
+
+
+### 본인 상품 수정 -> ok
+PATCH http://localhost:8080/api/products/3
+Authorization: {{Authorization}}
+Content-Type: application/json
+
+{
+  "name": "성모의콜라2리터",
+  "price": "6500"
+}
+
+### 상품 삭제 -> ok
+DELETE http://localhost:8080/api/products/1
+Authorization: {{Authorization}}

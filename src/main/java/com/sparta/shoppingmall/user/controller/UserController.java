@@ -1,166 +1,171 @@
 package com.sparta.shoppingmall.user.controller;
 
 import com.sparta.shoppingmall.base.dto.CommonResponse;
-import com.sparta.shoppingmall.jwt.JwtProvider;
 import com.sparta.shoppingmall.security.UserDetailsImpl;
 import com.sparta.shoppingmall.user.dto.*;
 import com.sparta.shoppingmall.user.service.UserService;
-
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+import static com.sparta.shoppingmall.util.ControllerUtil.*;
+
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
 public class UserController {
+
     private final UserService userService;
-    private final JwtProvider jwtProvider;
 
     /**
-     * 1. 회원 가입
-     *
-     * @param requestDTO 회원 가입 요청 데이터
-     * @return CommonResponse<CommonResponse < SignupResponseDTO>> 형태의 HTTP 응답
-     * - 상태 코드: 회원 가입이 성공적으로 이루어지면 201 (CREATED)
-     * - 메시지: 회원 가입 상태를 설명하는 메시지
-     * - 데이터: 생성된 회원의 정보를 담고 있는 SignupResponseDTO 객체
+     * 회원 가입
      */
     @PostMapping("/signup")
-    public ResponseEntity<CommonResponse<SignupResponseDTO>> createUser(@Valid @RequestBody SignupRequestDTO requestDTO) {
-        SignupResponseDTO responseDTO = userService.createUser(requestDTO);
-
-        CommonResponse<SignupResponseDTO> responseMessage = CommonResponse.<SignupResponseDTO>builder()
-                .statusCode(HttpStatus.CREATED.value())
-                .message("회원가입이 완료되었습니다.")
-                .data(responseDTO)
-                .build();
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseMessage);
+    public ResponseEntity<CommonResponse> createUser(
+            @Valid @RequestBody SignupRequestDTO requestDTO,
+            BindingResult bindingResult
+    ) {
+        if (bindingResult.hasErrors()) {
+            return getFieldErrorResponseEntity(bindingResult, "회원가입 실패");
+        }
+        try{
+            log.info("test");
+            SignupResponseDTO response = userService.createUser(requestDTO);
+            return getResponseEntity(response, "회원가입 성공");
+        } catch (Exception e) {
+            return getBadRequestResponseEntity(e);
+        }
     }
 
     /**
-     * 2. 회원 탈퇴
-     *
-     * @param requestDTO  비밀번호 확인 요청 데이터
-     * @param userDetails 로그인한 사용자의 세부 정보
-     * @return ResponseEntity<ResponseMessage < String>> 형태의 HTTP 응답:
-     * - 상태 코드: 회원 탈퇴가 성공적으로 이루어지면 200 (OK)
-     * - 메시지: 회원 탈퇴 상태를 설명하는 메시지
-     * - 데이터: 탈퇴된 회원의 ID
+     * 회원 탈퇴
      */
     @PatchMapping("/withdraw")
-    public ResponseEntity<CommonResponse<String>> withdrawUser(@Valid @RequestBody WithdrawRequestDTO requestDTO,
-                                                               @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        String username = userService.withdrawUser(requestDTO, userDetails.getUser());
+    public ResponseEntity<CommonResponse> withdrawUser(
+            @Valid @RequestBody WithdrawRequestDTO requestDTO,
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            BindingResult bindingResult
+    ) {
+        if (bindingResult.hasErrors()) {
+            return getFieldErrorResponseEntity(bindingResult, "회원탈퇴 실패");
+        }
+        try {
+            Long response = userService.withdrawUser(requestDTO, userDetails.getUser());
+            return getResponseEntity(response, "회원탈퇴 성공");
+        } catch (Exception e) {
+            return getBadRequestResponseEntity(e);
+        }
 
-
-        CommonResponse<String> responseMessage = CommonResponse.<String>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("회원 탈퇴가 완료되었습니다.")
-                .data(username)
-                .build();
-
-        return ResponseEntity.status(HttpStatus.OK).body(responseMessage);
     }
 
     /**
-     * 3. 로그아웃
-     *
-     * @param userDetails 로그인한 사용자의 세부 정보
-     * @param request     HTTP 요청
-     * @return ResponseEntity<ComooneResponse < String>> 형태의 HTTP 응답
-     * - 상태 코드: 로그아웃이 성공적으로 이루어지면 200 (OK)
-     * - 메시지: 로그아웃 상태를 설명하는 메시지
-     * - 데이터: 로그아웃된 회원의 ID
+     * 로그아웃
      */
-    @GetMapping("/logout")
-    public ResponseEntity<CommonResponse<String>> logout(@AuthenticationPrincipal UserDetailsImpl userDetails, HttpServletRequest request) {
-
-        String accessToken = JwtProvider.getJwtFromHeader(request);
-        String refreshToken = jwtProvider.getJwtRefreshTokenFromHeader(request);
-        userService.logout(userDetails.getUser(), accessToken, refreshToken);
-
-        CommonResponse<String> responseMessage = CommonResponse.<String>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("로그아웃이 완료되었습니다.")
-                .data(userDetails.getUser().getUsername())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.OK).body(responseMessage);
+    @DeleteMapping("/logout")
+    public ResponseEntity<CommonResponse> logout(
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        try{
+            Long response = userService.logout(userDetails.getUser().getId());
+            return getResponseEntity(response, "로그아웃 성공");
+        } catch (Exception e) {
+            return getBadRequestResponseEntity(e);
+        }
     }
 
     /**
-     * 3. 로그인한 사용자 프로필 조회
-     *
-     * @param userDetails 로그인한 사용자의 세부 정보
-     * @return ResponseEntity<ResponseMessage < UserProfileResponseDTO>> 형태의 HTTP 응답. 이 응답은 다음을 포함한다:
-     * - 상태 코드: 프로필 조회가 성공적으로 이루어지면 200 (OK)
-     * - 메시지: 프로필 조회 상태를 설명하는 메시지
-     * - 데이터: 조회된 사용자의 정보를 담고 있는 UserProfileResponseDTO 객체
+     * 로그인한 사용자 프로필 조회
      */
-    @GetMapping("/profiles")
-    public ResponseEntity<CommonResponse<EditProfileResponseDTO>> userProfile(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        EditProfileResponseDTO responseDTO = userService.inquiryUser(userDetails.getUsername());
-
-        CommonResponse<EditProfileResponseDTO> responseMessage = CommonResponse.<EditProfileResponseDTO>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("프로필 조회가 완료되었습니다.")
-                .data(responseDTO)
-                .build();
-
-        return ResponseEntity.status(HttpStatus.OK).body(responseMessage);
+    @GetMapping("/{userId}/profiles")
+    public ResponseEntity<CommonResponse> userProfile(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        try{
+            EditProfileResponseDTO response = userService.inquiryUser(userId, userDetails.getUser());
+            return getResponseEntity(response, "프로필 조회 성공");
+        } catch (Exception e) {
+            return getBadRequestResponseEntity(e);
+        }
     }
 
     /**
-     * 4. 로그인한 사용자 프로필 수정
-     *
-     * @param requestDTO  프로필 수정 요청 데이터
-     * @param userDetails 로그인한 사용자의 세부 정보
-     * @return ResponseEntity<CommonMessage < SignupResponseDTO>> 형태의 HTTP 응답. 이 응답은 다음을 포함한다:
-     * - 상태 코드: 프로필 수정이 성공적으로 이루어지면 200 (OK)
-     * - 메시지: 프로필 수정 상태를 설명하는 메시지
-     * - 데이터: 수정된 사용자의 정보를 담고 있는 UserResponseDTO 객체
+     * 로그인한 사용자 프로필 수정
      */
-    @PatchMapping("/profiles")
-    public ResponseEntity<CommonResponse<UserResponseDTO>> updateUser(@RequestBody EditProfileRequestDTO requestDTO,
-                                                                      @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        UserResponseDTO userResponseDTO = userService.editProfile(requestDTO, userDetails.getUser());
-
-        CommonResponse<UserResponseDTO> responseMessage = CommonResponse.<UserResponseDTO>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("프로필 수정이 완료되었습니다.")
-                .data(userResponseDTO)
-                .build();
-
-        return ResponseEntity.status(HttpStatus.OK).body(responseMessage);
+    @PatchMapping("/{userId}/profiles")
+    public ResponseEntity<CommonResponse> updateProfile(
+            @PathVariable Long userId,
+            @Valid @RequestBody EditProfileRequestDTO request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            BindingResult bindingResult
+    ) {
+        if (bindingResult.hasErrors()) {
+            return getFieldErrorResponseEntity(bindingResult, "프로필 수정 실패");
+        }
+        try{
+            UserResponseDTO response = userService.editProfile(userId, request, userDetails.getUser());
+            return getResponseEntity(response, "프로필 수정 성공");
+        } catch (Exception e) {
+            return getBadRequestResponseEntity(e);
+        }
     }
 
     /**
-     * 5. 비밀번호 변경
-     *
-     * @param requestDTO  비밀번호 변경 요청 데이터
-     * @param userDetails 로그인한 사용자의 세부 정보
-     * @return ResponseEntity<ResponseMessage < UserResponseDTO>> 형태의 HTTP 응답. 이 응답은 다음을 포함한다:
-     * - 상태 코드: 비밀번호 변경이 성공적으로 이루어지면 200 (OK)
-     * - 메시지: 비밀번호 변경 상태를 설명하는 메시지
-     * - 데이터: 변경된 사용자의 정보를 담고 있는 UserResponseDTO 객체
+     * 비밀번호 변경
      */
-    @PutMapping("/updatePassword")
-    public ResponseEntity<CommonResponse<UserResponseDTO>> updatePassword(@Valid @RequestBody EditPasswordRequestDTO requestDTO,
-                                                                          @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        UserResponseDTO userResponseDTO = userService.editPassword(requestDTO, userDetails);
+    @PutMapping("/update-password")
+    public ResponseEntity<CommonResponse> updatePassword(
+            @Valid @RequestBody EditPasswordRequestDTO request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            BindingResult bindingResult
+    ) {
+        if (bindingResult.hasErrors()) {
+            return getFieldErrorResponseEntity(bindingResult, "비밀번호 변경 실패");
+        }
+        try{
+            UserResponseDTO response = userService.editPassword(request, userDetails.getUser());
+            return getResponseEntity(response, "비밀번호 변경 성공");
+        } catch (Exception e) {
+            return getBadRequestResponseEntity(e);
+        }
+    }
 
-        CommonResponse<UserResponseDTO> responseMessage = CommonResponse.<UserResponseDTO>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("비밀번호가 변경되었습니다.")
-                .data(userResponseDTO)
-                .build();
+    /**
+     * 회원 전체조회 - 관리자
+     */
+    @Secured("ADMIN")
+    @GetMapping("/admin")
+    public ResponseEntity<CommonResponse> getUserList(){
+        try{
+            List<AdminUserResponse> response = userService.getUserList();
+            return getResponseEntity(response, "회원 전체 조회 성공");
+        } catch (Exception e) {
+            return getBadRequestResponseEntity(e);
+        }
+    }
 
-        return ResponseEntity.status(HttpStatus.OK).body(responseMessage);
+    /**
+     * 회원 정보 수정 - 관리자
+     */
+    @Secured("ADMIN")
+    @PutMapping("/{userId}/admin")
+    public ResponseEntity<CommonResponse> updateUser(
+            @PathVariable Long userId,
+            @Valid @RequestBody AdminUpdateUserRequest request
+    ) {
+        try{
+            AdminUserResponse response = userService.updateUser(request, userId);
+            return getResponseEntity(response, "회원 전체 조회 성공");
+        } catch (Exception e) {
+            return getBadRequestResponseEntity(e);
+        }
     }
 }

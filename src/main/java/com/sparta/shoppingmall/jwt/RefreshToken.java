@@ -1,9 +1,7 @@
 package com.sparta.shoppingmall.jwt;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.sparta.shoppingmall.user.entity.User;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,20 +20,20 @@ public class RefreshToken {
 
     private String refreshToken;
 
+
+    /**
+     * 토큰 생성자
+     */
     public RefreshToken(String username, String refreshToken) {
         this.username = username;
         this.refreshToken = refreshToken;
     }
 
+    /**
+     * 토큰 업데이트
+     */
     public void update(String newToken) {
-        System.out.println("RefreshToken.update");
         this.refreshToken = newToken;
-    }
-
-    //로그인시 리프레시 토큰 초기화
-    @Transactional
-    public void refreshTokenReset(String refreshToken) {
-        this.refreshToken = refreshToken;
     }
 
 

@@ -3,7 +3,6 @@ spring:
     name: shoppingmall
 
 ---
-
 spring:
   datasource:
     url: jdbc:mysql://${DB_URL}/shoppingmall
@@ -16,18 +15,16 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
-        #show_sql: true
+        show_sql: true
         format_sql: true
-        connection:
-          CharSet: utf-8
-          characterEncoding: utf-8
-          useUnicode: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
 
-logging.level:
-  root: info
+#logging.level:
+  #root: info
 
 jwt:
   secret-key: ${JWT-SECRET-KEY}

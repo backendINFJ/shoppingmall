@@ -3,6 +3,7 @@ package com.sparta.shoppingmall.security;
 
 import com.sparta.shoppingmall.user.entity.User;
 import com.sparta.shoppingmall.user.entity.UserStatus;
+import com.sparta.shoppingmall.user.entity.UserType;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -32,14 +33,13 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        UserStatus role = user.getUserStatus();
-        String authority = role.name();
+        UserType role = user.getUserType();
 
-        SimpleGrantedAuthority simpleGrantedAuthority = new SimpleGrantedAuthority(authority);
+        SimpleGrantedAuthority simpleGrantedAuthority = new SimpleGrantedAuthority(role.getAuthority());
+
         Collection<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(simpleGrantedAuthority);
 
         return authorities;
     }
-
 }

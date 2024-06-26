@@ -22,5 +22,5 @@ public abstract class Timestamped {
     @Column(nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime updateAt;
-
+//commit test
 }
