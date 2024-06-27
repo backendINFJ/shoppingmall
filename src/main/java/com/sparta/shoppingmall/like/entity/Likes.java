@@ -2,12 +2,17 @@ package com.sparta.shoppingmall.like.entity;
 
 import com.sparta.shoppingmall.base.entity.Timestamped;
 import com.sparta.shoppingmall.like.dto.LikesRequest;
+import com.sparta.shoppingmall.product.entity.Product;
 import com.sparta.shoppingmall.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Entity
@@ -33,6 +38,9 @@ public class Likes extends Timestamped {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @OneToMany(mappedBy = "contentId",fetch = FetchType.LAZY)
+    private List<Likes> likes = new ArrayList<>();
 
     @Builder
     public Likes(ContentType contenttype, Long contentId, LikeStatus status, User user) {
@@ -77,4 +85,16 @@ public class Likes extends Timestamped {
         }
     }
 
+    /**
+     * 종아요 카운팅 메서드
+     */
+    public List<Long> getLikedProducts(User user) {
+        return this.likes.stream()
+                .filter(like -> like.getUser().equals(user) && like.getContentType() == ContentType.PRODUCT)
+                .map(Likes::getContentId)
+                .collect(Collectors.toList());
+    }
+
 }
+
+
