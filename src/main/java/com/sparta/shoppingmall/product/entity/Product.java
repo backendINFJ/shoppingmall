@@ -2,6 +2,8 @@ package com.sparta.shoppingmall.product.entity;
 
 import com.sparta.shoppingmall.base.entity.Timestamped;
 import com.sparta.shoppingmall.comment.entity.Comment;
+import com.sparta.shoppingmall.like.entity.LikeStatus;
+import com.sparta.shoppingmall.like.entity.Likes;
 import com.sparta.shoppingmall.order.entity.OrderGroup;
 import com.sparta.shoppingmall.user.entity.User;
 import jakarta.persistence.*;
@@ -33,7 +35,7 @@ public class Product extends Timestamped {
 
     @Column(nullable = false)
     @ColumnDefault("0")
-    private int likeCount;
+    private Long likeCount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="user_id")
@@ -98,5 +100,7 @@ public class Product extends Timestamped {
     public void decreaseLikeCount() {
         this.likeCount--;
     }
+
+
 
 }

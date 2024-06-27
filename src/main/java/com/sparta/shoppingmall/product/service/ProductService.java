@@ -100,6 +100,7 @@ public class ProductService {
                 .name(product.getName())
                 .price(product.getPrice())
                 .status(product.getStatus())
+                .likeCounts(product.getLikeCount())
                 .user(product.getUser())
                 .build();
     }

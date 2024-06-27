@@ -14,14 +14,16 @@ public class ProductResponse {
     private final String name;
     private final Long price;
     private final ProductStatus status;
+    private final Long likeCounts;
 
     @Builder
-    public ProductResponse(Long id, String name, Long price, ProductStatus status, User user) {
+    public ProductResponse(Long id, String name, Long price, ProductStatus status, User user, Long likeCounts) {
         this.id = id;
         this.userId = user.getId();
         this.username = user.getUsername(); //사용자 ID
         this.name = name;
         this.price = price;
         this.status = status;
+        this.likeCounts = likeCounts;
     }
 }
