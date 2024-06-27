@@ -86,7 +86,7 @@ public class Likes extends Timestamped {
     }
 
     /**
-     * 종아요 카운팅 메서드
+     * 종아요 카운팅 메서드 - Product
      */
     public List<Long> getLikedProducts(User user) {
         return this.likes.stream()
