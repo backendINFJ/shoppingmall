@@ -19,6 +19,7 @@ public class CommentResponse {
 
     private final LocalDateTime updatedAt;
 
+    @Builder
     public CommentResponse(Comment comment) {
         this.id = comment.getId();
         this.content = comment.getContent();

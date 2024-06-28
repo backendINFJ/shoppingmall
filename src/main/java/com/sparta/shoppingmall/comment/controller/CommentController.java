@@ -3,6 +3,7 @@ package com.sparta.shoppingmall.comment.controller;
 import com.sparta.shoppingmall.base.dto.CommonResponse;
 import com.sparta.shoppingmall.comment.dto.CommentRequest;
 import com.sparta.shoppingmall.comment.dto.CommentResponse;
+import com.sparta.shoppingmall.comment.entity.Comment;
 import com.sparta.shoppingmall.comment.service.CommentService;
 import com.sparta.shoppingmall.security.UserDetailsImpl;
 import jakarta.validation.Valid;
@@ -36,7 +37,7 @@ public class CommentController {
         if (bindingResult.hasErrors()) {
             return getFieldErrorResponseEntity(bindingResult, "댓글 생성 실패");
         }
-        try{
+        try {
             CommentResponse response = commentService.createComment(request, productId, userDetails.getUser());
             return getResponseEntity(response, "댓글 생성 성공");
         } catch (Exception e) {
@@ -51,8 +52,8 @@ public class CommentController {
     public ResponseEntity<CommonResponse> getComments(
             @PathVariable Long productId,
             @AuthenticationPrincipal UserDetailsImpl userDetails
-    ){
-        try{
+    ) {
+        try {
             List<CommentResponse> response = commentService.getComments(productId);
             return getResponseEntity(response, "댓글 조회 성공");
         } catch (Exception e) {
@@ -70,11 +71,11 @@ public class CommentController {
             @Valid @RequestBody CommentRequest request,
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             BindingResult bindingResult
-    ){
-        if(bindingResult.hasErrors()){
+    ) {
+        if (bindingResult.hasErrors()) {
             return getFieldErrorResponseEntity(bindingResult, "댓글 수정 실패");
         }
-        try{
+        try {
             CommentResponse response = commentService.updateComments(request, productId, commentId, userDetails.getUser());
             return getResponseEntity(response, "댓글 수정 성공");
         } catch (Exception e) {
@@ -90,8 +91,8 @@ public class CommentController {
             @PathVariable Long productId,
             @PathVariable Long commentId,
             @AuthenticationPrincipal UserDetailsImpl userDetails
-    ){
-        try{
+    ) {
+        try {
             Long response = commentService.deleteComment(productId, commentId, userDetails.getUser());
             return getResponseEntity(response, "댓글 삭제 성공");
         } catch (Exception e) {
@@ -99,4 +100,21 @@ public class CommentController {
         }
     }
 
+    /**
+     * 댓글 단건 조회
+     */
+    @GetMapping("/{commentId}")
+    public ResponseEntity<CommonResponse> getComment(
+            @PathVariable Long productId,
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        try {
+            Comment comment = commentService.getComment(commentId);
+            CommentResponse response = new CommentResponse(comment);
+            return getResponseEntity(response, "댓글 단건 조회");
+        } catch (Exception e) {
+            return getBadRequestResponseEntity(e);
+        }
+    }
 }

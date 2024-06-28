@@ -44,7 +44,7 @@ public class CommentService {
         List<Comment> comments = product.getComments();
 
         List<CommentResponse> response = new ArrayList<>();
-        for(Comment comment : comments) {
+        for (Comment comment : comments) {
             response.add(new CommentResponse(comment));
         }
 
@@ -58,7 +58,7 @@ public class CommentService {
     public CommentResponse updateComments(CommentRequest request, Long productId, Long commentId, User user) {
         Comment comment = getComment(commentId);
 
-        if(!user.getUserType().equals(UserType.ADMIN)){ // 관리자가 아닐 경우 댓글 작성자와 로그인 사용자를 비교
+        if (!user.getUserType().equals(UserType.ADMIN)) { // 관리자가 아닐 경우 댓글 작성자와 로그인 사용자를 비교
             comment.verifyCommentUser(user.getId());
         }
         comment.verifyCommentProduct(productId);
@@ -74,7 +74,7 @@ public class CommentService {
     public Long deleteComment(Long productId, Long commentId, User user) {
         Comment comment = getComment(commentId);
 
-        if(!user.getUserType().equals(UserType.ADMIN)){ // 관리자가 아닐 경우 댓글 작성자와 로그인 사용자를 비교
+        if (!user.getUserType().equals(UserType.ADMIN)) { // 관리자가 아닐 경우 댓글 작성자와 로그인 사용자를 비교
             comment.verifyCommentUser(user.getId());
         }
         comment.verifyCommentProduct(productId);
