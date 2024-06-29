@@ -3,10 +3,12 @@ package com.sparta.shoppingmall.like.controller;
 import com.sparta.shoppingmall.base.dto.CommonResponse;
 import com.sparta.shoppingmall.like.dto.LikesRequest;
 import com.sparta.shoppingmall.like.dto.LikesResponse;
+import com.sparta.shoppingmall.like.entity.Likes;
 import com.sparta.shoppingmall.like.service.LikesService;
 import com.sparta.shoppingmall.security.UserDetailsImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
@@ -74,6 +76,11 @@ public class LikesController {
         if (!Objects.equals(contentId, requestId)) {
             throw new IllegalArgumentException("PathVariable의 contentId와 RequestBody의 contentId가 다릅니다.");
         }
+    }
+
+    @GetMapping("/users/{userId}/likes")
+    public Page<Likes> getLikedPosts(@PathVariable Long userId, @RequestParam(defaultValue = "1") int page) {
+        return likesService.getLikedProducts(userId, page); // 1
     }
 
 }
