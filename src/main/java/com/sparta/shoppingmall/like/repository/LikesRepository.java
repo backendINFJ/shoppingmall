@@ -17,4 +17,7 @@ public interface LikesRepository extends JpaRepository<Likes, Long> {
     int countByContentIdAndContentType(Long contentId, ContentType contentType);
 
     Page<Likes> findByUserAndStatus(User user, LikeStatus status, Pageable pageable); // 1
+
+    Page<Likes> findByUserAndStatusAndContentType(User user, LikeStatus status, ContentType contentType, Pageable pageable);
+ // 2
 }

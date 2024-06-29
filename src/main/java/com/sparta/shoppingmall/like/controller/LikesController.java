@@ -83,4 +83,9 @@ public class LikesController {
         return likesService.getLikedProducts(userId, page); // 1
     }
 
+    @GetMapping("/users/{userId}/likes/comments")
+    public Page<Likes> getLikedComments(@PathVariable Long userId, @RequestParam(defaultValue = "1") int page) {
+        return likesService.getLikedComments(userId, page);
+    } // 2
+
 }

@@ -3,6 +3,7 @@ package com.sparta.shoppingmall.like.service;
 import com.sparta.shoppingmall.comment.service.CommentService;
 import com.sparta.shoppingmall.like.dto.LikesRequest;
 import com.sparta.shoppingmall.like.dto.LikesResponse;
+import com.sparta.shoppingmall.like.entity.ContentType;
 import com.sparta.shoppingmall.like.entity.LikeStatus;
 import com.sparta.shoppingmall.like.entity.Likes;
 import com.sparta.shoppingmall.like.repository.LikesRepository;
@@ -98,5 +99,13 @@ public class LikesService {
         );
         PageRequest pageable = PageRequest.of(page - 1, 5, Sort.by(Sort.Direction.DESC, "createAt"));
         return likesRepository.findByUserAndStatus(user, LikeStatus.LIKED, pageable); // 1
+    }
+
+    public Page<Likes> getLikedComments(Long userId, int page) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다.")
+        );
+        PageRequest pageable = PageRequest.of(page - 1, 5, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return likesRepository.findByUserAndStatusAndContentType(user, LikeStatus.LIKED, ContentType.COMMENT, pageable); // 2
     }
 }
