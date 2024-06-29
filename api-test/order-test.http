@@ -1,0 +1,24 @@
+### 상품 주문
+POST http://localhost:8080/api/orders
+Authorization: {{Authorization}}
+Content-Type: application/json
+
+{
+  "address": "대전 서구",
+  "totalPrice": 12300,
+  "productIdList" : [2, 3]
+}
+
+### 사용자의 모든 주문내역 조회하기
+GET http://localhost:8080/api/orders
+Authorization: {{Authorization}}
+
+
+### 사용자의 주문내역 상세 조회
+GET http://localhost:8080/api/orders/1
+Authorization: {{Authorization}}
+
+
+### 주문 취소
+PUT http://localhost:8080/api/orders/1
+Authorization: {{Authorization}}

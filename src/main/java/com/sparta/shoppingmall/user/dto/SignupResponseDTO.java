@@ -9,13 +9,11 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
-@AllArgsConstructor
-@Builder
 public class SignupResponseDTO {
 
     private final Long id;
     private final String username;
+    private final String name;
     private final String email;
     private final String address;
     private final LocalDateTime createAt;
@@ -25,6 +23,7 @@ public class SignupResponseDTO {
     public SignupResponseDTO(User user) {
         this.id = user.getId();
         this.username = user.getUsername();
+        this.name = user.getName();
         this.email = user.getEmail();
         this.address = user.getAddress();
         this.createAt = user.getCreateAt();

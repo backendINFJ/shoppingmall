@@ -1,0 +1,17 @@
+### 장바구니에 상품 단건 담기 -> ok
+POST http://localhost:8080/api/carts/products
+Authorization: {{Authorization}}
+Content-Type: application/json
+
+{
+  "productId" : 3
+}
+
+### 장바구니에 상품 리스트 조회 -> ok
+GET http://localhost:8080/api/carts/products?page=1
+Authorization: {{Authorization}}
+
+
+### 장바구니에 상품 단건 삭제 ->
+DELETE http://localhost:8080/api/carts/products/3
+Authorization: {{Authorization}}

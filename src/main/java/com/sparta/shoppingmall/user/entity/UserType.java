@@ -1,8 +1,5 @@
 package com.sparta.shoppingmall.user.entity;
 
-import jakarta.persistence.Column;
-
-
 public enum UserType {
 
     USER, // 일반 사용자
@@ -11,11 +8,11 @@ public enum UserType {
     public String getAuthority() {
         switch (this) { // 사용자 분류
             case USER:
-                return "ROLE_USER"; // 일반 사용자
+                return "USER"; // 일반 사용자
             case ADMIN:
-                return "ROLE_ADMIN"; // 관리자
+                return "ADMIN"; // 관리자
             default:
-                return null; // 해당 안될경우 null 처리
+                throw new IllegalArgumentException("해당 권한은 존재하지 않습니다.");
         }
     }
 }

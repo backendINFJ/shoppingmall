@@ -15,7 +15,7 @@ public final class ControllerUtil {
     private ControllerUtil() {
     }
 
-    public static ResponseEntity<CommonResponse<?>> getFieldErrorResponseEntity(BindingResult bindingResult, String message) {
+    public static ResponseEntity<CommonResponse> getFieldErrorResponseEntity(BindingResult bindingResult, String message) {
         List<FieldError> fieldErrors = bindingResult.getFieldErrors();
         for (FieldError fieldError : fieldErrors) {
             log.error("{} field : {}", fieldError.getField(), fieldError.getDefaultMessage());
@@ -29,14 +29,14 @@ public final class ControllerUtil {
                         .build());
     }
 
-    public static ResponseEntity<CommonResponse<?>> getBadRequestResponseEntity(Exception e) {
+    public static ResponseEntity<CommonResponse> getBadRequestResponseEntity(Exception e) {
         return org.springframework.http.ResponseEntity.badRequest().body(CommonResponse.builder()
-                .statusCode(HttpStatus.OK.value())
+                .statusCode(HttpStatus.BAD_REQUEST.value())
                 .message(e.getMessage())
                 .build());
     }
 
-    public static ResponseEntity<CommonResponse<?>> getResponseEntity(Object response, String message) {
+    public static ResponseEntity<CommonResponse> getResponseEntity(Object response, String message) {
         return org.springframework.http.ResponseEntity.ok().body(CommonResponse.builder()
                 .statusCode(HttpStatus.OK.value())
                 .message(message)

@@ -1,183 +1,171 @@
 package com.sparta.shoppingmall.user.service;
 
 
-import java.time.LocalDateTime;
-import java.util.Optional;
-import com.sparta.shoppingmall.jwt.JwtProvider;
 import com.sparta.shoppingmall.jwt.RefreshTokenService;
-import com.sparta.shoppingmall.security.UserDetailsImpl;
+import com.sparta.shoppingmall.like.entity.ContentType;
+import com.sparta.shoppingmall.like.entity.LikeStatus;
+import com.sparta.shoppingmall.like.repository.LikesRepository;
 import com.sparta.shoppingmall.user.dto.*;
 import com.sparta.shoppingmall.user.entity.User;
 import com.sparta.shoppingmall.user.entity.UserStatus;
 import com.sparta.shoppingmall.user.entity.UserType;
 import com.sparta.shoppingmall.user.exception.UserException;
 import com.sparta.shoppingmall.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.RequiredArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class UserService {
+
     private final UserRepository userRepository;
+
     private final PasswordEncoder passwordEncoder;
-    private final JwtProvider jwtProvider;
+
     private final RefreshTokenService refreshTokenService;
 
+    private final LikesRepository likesRepository;
+
     /**
-     * 1. 회원 가입
-     * @param requestDTO 회원 가입 요청 데이터
-     * @return SignupResponseDTO 회원 가입 결과
+     * 회원 가입
      */
     @Transactional
-    public SignupResponseDTO createUser(SignupRequestDTO requestDTO) {
-        //아이디 유효성 검사
-        validateUsername(requestDTO.getUsername());
-
+    public SignupResponseDTO createUser(SignupRequestDTO request) {
+        //아이디 중복 검사
+        validateUsername(request.getUsername());
 
         //비밀번호 암호화
-        String password = passwordEncoder.encode(requestDTO.getPassword());
-        User user = User.builder()
-                .username(requestDTO.getUsername())
-                .password(password)
-                .email(requestDTO.getEmail())
-                .address(requestDTO.getAddress())
-                .userStatus(UserStatus.JOIN)
-                .userType(UserType.USER)
-                .statusChangedAt(LocalDateTime.now())
-                .build();
+        String password = passwordEncoder.encode(request.getPassword());
+        User user = new User(request, password, request.getUserType(), UserStatus.JOIN, LocalDateTime.now());
 
-        User saveUser = userRepository.save(user);
+        userRepository.save(user);
 
-        return new SignupResponseDTO(saveUser);
+        return new SignupResponseDTO(user);
     }
 
-
     /**
-     * 2. 회원 탈퇴
-     * @param requestDTO 비밀번호 확인 요청 데이터
-     * @param user 로그인한 사용자의 세부 정보
-     * @return 탈퇴된 회원의 ID
+     * 회원 탈퇴
      */
     @Transactional
-    public String withdrawUser(WithdrawRequestDTO requestDTO, User user) {
+    public Long withdrawUser(WithdrawRequestDTO request, User user) {
         //회원 상태 확인
         checkUserStatus(user.getUserStatus());
 
         //비밀번호 일치 확인
-        if (!passwordEncoder.matches(requestDTO.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new UserException("비밀번호가 일치하지 않습니다.");
         }
 
         //회원 상태 변경
-        user.getUserStatus();
+        user.changeStatus(UserStatus.WITHDRAW);
         userRepository.save(user);
 
-        return user.getUsername();
+        return user.getId();
     }
 
     /**
-     * 4. 로그아웃
-     * @param user 로그인한 사용자의 세부 정보
-     * @param accessToken access token
-     * @param refreshToken refresh token
+     * 로그아웃
      */
     @Transactional
-    public void logout(User user, String accessToken, String refreshToken) {
+    public Long logout(Long userId) {
+        //사용자 조회
+        User user = findById(userId);
 
-        if(user==null){
-            throw new UserException("로그인되어 있는 유저가 아닙니다.");
-        }
+        refreshTokenService.deleteToken(user.getUsername());
 
-        if(user.getUserStatus().equals(UserStatus.WITHDRAW)){
-            throw new UserException("탈퇴한 회원입니다.");
-        }
-
-        User existingUser = userRepository.findByUsername(user.getUsername())
-                .orElseThrow(() -> new UserException("해당 유저가 존재하지 않습니다."));
-
-        existingUser.refreshTokenReset("");
-        userRepository.save(existingUser);
-
-        jwtProvider.invalidateToken(accessToken);
-        jwtProvider.invalidateToken(refreshToken);
+        return user.getId();
     }
 
 
     /**
-     * 5. 회원 조회 (유저 아이디)
-     * @param username 조회할 회원의 username
-     * @return EditProfileResponseDTO 회원 조회 결과
+     * 회원 조회 (유저 아이디)
      */
-    public EditProfileResponseDTO inquiryUser(String userId) {
-        User user = userRepository.findByUsername(userId).orElseThrow(() -> new UserException("해당 유저를 찾을 수 없습니다."));
+    public EditProfileResponseDTO inquiryUser(Long userId, User user) {
+        if(!Objects.equals(user.getId(), userId)) {
+            throw new IllegalArgumentException("사용자가 일치하지 않습니다.");
+        }
         return new EditProfileResponseDTO(user);
     }
 
 
     /**
-     * 7. 회원 프로필 수정
-     * @param requestDTO 프로필 수정 요청 데이터
-     * @param user 로그인한 사용자의 세부 정보
-     * @return UserResponseDTO 회원 프로필 수정 결과
+     * 회원 프로필 수정
      */
     @Transactional // 변경할 필드만 수정하고 바꾸지 않은 필드는 기존 데이터를 유지하는 메서드
-    public UserResponseDTO editProfile(EditProfileRequestDTO requestDTO, User user) {
-        if (!passwordEncoder.matches(requestDTO.getPassword(), user.getPassword())) {
-            throw new UserException("비밀번호가 일치하지 않습니다.");
+    public UserResponseDTO editProfile(Long userId, EditProfileRequestDTO request, User user) {
+        if(!Objects.equals(userId, user.getId())){
+            throw new IllegalArgumentException("사용자가 일치하지 않습니다.");
         }
-
-        String editUsername = requestDTO.getUsername() != null ? requestDTO.getUsername() : user.getUsername();
-        String editEmail = requestDTO.getEmail() != null ? requestDTO.getEmail() : user.getEmail();
-        String editAddress = requestDTO.getAddress() != null ? requestDTO.getAddress() : user.getAddress();
-
-        user.editProfile(editUsername, editEmail,editAddress );
+        user.editProfile(request.getName(), request.getEmail(), request.getAddress());
         userRepository.save(user);
+
         return new UserResponseDTO(user);
     }
 
     /**
-     * 8. 비밀번호 변경
-     * @param requestDTO 비밀번호 변경 요청 데이터
-     * @param userDetails 로그인한 사용자의 세부 정보
-     * @return UserResponseDTO 비밀번호 변경 결과
+     * 비밀번호 변경
      */
     @Transactional
-    public UserResponseDTO editPassword(EditPasswordRequestDTO requestDTO, UserDetailsImpl userDetails) {
-        User user = userDetails.getUser();
-
-        if (!passwordEncoder.matches(requestDTO.getPassword(), user.getPassword())) {
+    public UserResponseDTO editPassword(EditPasswordRequestDTO request, User user) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new UserException("현재 비밀번호가 일치하지 않습니다.");
         }
 
-        if (passwordEncoder.matches(requestDTO.getNewPassword(), user.getPassword())) {
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
             throw new UserException("새로운 비밀번호와 기존 비밀번호가 동일합니다.");
         }
 
         // 새로운 비밀번호가 최근 비밀번호들과 일치하는지 확인 - > 유효성 검사
-        if (passwordEncoder.matches(requestDTO.getNewPassword(), user.getRecentPassword())
-                || passwordEncoder.matches(requestDTO.getNewPassword(), user.getRecentPassword2())
-                || passwordEncoder.matches(requestDTO.getNewPassword(), user.getRecentPassword3())) {
+        if (passwordEncoder.matches(request.getNewPassword(), user.getRecentPassword())
+                || passwordEncoder.matches(request.getNewPassword(), user.getRecentPassword2())
+                || passwordEncoder.matches(request.getNewPassword(), user.getRecentPassword3())) {
             throw new UserException("새로운 비밀번호는 최근 사용한 비밀번호와 다르게 설정해야 합니다.");
         }
 
-        // 최근3개 비밀번호 저장
-        user.setRecentPassword3(user.getRecentPassword2());
-        user.setRecentPassword2(user.getRecentPassword());
-        user.setRecentPassword(user.getPassword());
+        String editPassword = passwordEncoder.encode(request.getNewPassword());
 
-        String editPassword = passwordEncoder.encode(requestDTO.getNewPassword());
+        // 최근3개 비밀번호 저장
         user.changePassword(editPassword);
         userRepository.save(user);
 
         return new UserResponseDTO(user);
     }
 
+
+    /**
+     * 회원 전체 조회 - 관리자
+     */
+    public List<AdminUserResponse> getUserList() {
+        List<User> userList = userRepository.findAll();
+        List<AdminUserResponse> response = new ArrayList<>();
+        for (User findUser : userList) {
+            response.add(new AdminUserResponse(findUser));
+        }
+        return response;
+    }
+
+    /**
+     * 회원 정보 수정 - 관리자
+     */
+    @Transactional
+    public AdminUserResponse updateUser(AdminUpdateUserRequest request, Long userId) {
+        User findUser = findById(userId);
+
+        findUser.adminUpdateUser(request);
+
+        return new AdminUserResponse(findUser);
+    }
+
     /**
      * 회원 상태 확인
-     * @param userStatus 회원 상태
      */
     private void checkUserStatus(UserStatus userStatus) {
         if (userStatus.equals(UserStatus.WITHDRAW)) {
@@ -187,7 +175,6 @@ public class UserService {
 
     /**
      * username 유효성 검사
-     * @param username 중복확인
      */
     private void validateUsername(String username) {
         Optional<User> findUser = userRepository.findByUsername(username);
@@ -196,4 +183,26 @@ public class UserService {
         }
     }
 
+    /**
+     * PK로 user 찾기
+     */
+    public User findById(Long userId) {
+        return userRepository.findById(userId).orElseThrow(
+                () -> new IllegalArgumentException("해당 사용자는 존재하지 않습니다.")
+        );
+    }
+
+    /**
+     * 프로필 조회시 응답필드 게시글 & 댓글 필드 추가
+     */
+
+    public UserResponseDTO getProfile(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다.")
+        );
+        UserResponseDTO response = new UserResponseDTO(user);
+        response.setLikedPostsCount(likesRepository.countByUserAndStatusAndContentType(user, LikeStatus.LIKED, ContentType.PRODUCT));
+        response.setLikedCommentsCount(likesRepository.countByUserAndStatusAndContentType(user, LikeStatus.LIKED, ContentType.COMMENT));
+        return response;
+    } // 3
 }
