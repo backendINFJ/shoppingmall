@@ -41,6 +41,7 @@ public class UserController {
             SignupResponseDTO response = userService.createUser(requestDTO);
             return getResponseEntity(response, "회원가입 성공");
         } catch (Exception e) {
+            log.error("제발 좀 되라~",e);
             return getBadRequestResponseEntity(e);
         }
     }
@@ -168,4 +169,9 @@ public class UserController {
             return getBadRequestResponseEntity(e);
         }
     }
-}
+
+    @GetMapping("/{userId}/profile")
+    public UserResponseDTO getProfile(@PathVariable Long userId) {
+        return userService.getProfile(userId);
+    }
+} // 3

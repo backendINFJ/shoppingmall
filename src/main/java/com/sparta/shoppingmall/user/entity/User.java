@@ -17,6 +17,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -120,7 +121,7 @@ public class User extends Timestamped {
         this.address = request.getAddress();
         this.userType = userType;
         this.userStatus = userStatus;
-        this.statusChangedAt = statusChangedAt;
+        this.statusChangedAt = LocalDateTime.now();
     }
 
     /**
