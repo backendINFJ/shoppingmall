@@ -204,5 +204,5 @@ public class UserService {
         response.setLikedPostsCount(likesRepository.countByUserAndStatusAndContentType(user, LikeStatus.LIKED, ContentType.PRODUCT));
         response.setLikedCommentsCount(likesRepository.countByUserAndStatusAndContentType(user, LikeStatus.LIKED, ContentType.COMMENT));
         return response;
-    } // 3 커밋 테스트
+    } // 3 커밋 테스트2
 }
