@@ -205,6 +205,4 @@ public class UserService {
         response.setLikedCommentsCount(likesRepository.countByUserAndStatusAndContentType(user, LikeStatus.LIKED, ContentType.COMMENT));
         return response;
     } // 3
-
-    asdads
 }
