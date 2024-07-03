@@ -7,6 +7,7 @@ import com.sparta.shoppingmall.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -36,12 +37,12 @@ public class UserController {
         if (bindingResult.hasErrors()) {
             return getFieldErrorResponseEntity(bindingResult, "회원가입 실패");
         }
-        try{
+        try {
             log.info("test");
             SignupResponseDTO response = userService.createUser(requestDTO);
             return getResponseEntity(response, "회원가입 성공");
         } catch (Exception e) {
-            log.error("제발 좀 되라~",e);
+            log.error("제발 좀 되라~", e);
             return getBadRequestResponseEntity(e);
         }
     }
@@ -74,7 +75,7 @@ public class UserController {
     public ResponseEntity<CommonResponse> logout(
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
-        try{
+        try {
             Long response = userService.logout(userDetails.getUser().getId());
             return getResponseEntity(response, "로그아웃 성공");
         } catch (Exception e) {
@@ -90,7 +91,7 @@ public class UserController {
             @PathVariable Long userId,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
-        try{
+        try {
             EditProfileResponseDTO response = userService.inquiryUser(userId, userDetails.getUser());
             return getResponseEntity(response, "프로필 조회 성공");
         } catch (Exception e) {
@@ -111,7 +112,7 @@ public class UserController {
         if (bindingResult.hasErrors()) {
             return getFieldErrorResponseEntity(bindingResult, "프로필 수정 실패");
         }
-        try{
+        try {
             UserResponseDTO response = userService.editProfile(userId, request, userDetails.getUser());
             return getResponseEntity(response, "프로필 수정 성공");
         } catch (Exception e) {
@@ -131,7 +132,7 @@ public class UserController {
         if (bindingResult.hasErrors()) {
             return getFieldErrorResponseEntity(bindingResult, "비밀번호 변경 실패");
         }
-        try{
+        try {
             UserResponseDTO response = userService.editPassword(request, userDetails.getUser());
             return getResponseEntity(response, "비밀번호 변경 성공");
         } catch (Exception e) {
@@ -144,8 +145,8 @@ public class UserController {
      */
     @Secured("ADMIN")
     @GetMapping("/admin")
-    public ResponseEntity<CommonResponse> getUserList(){
-        try{
+    public ResponseEntity<CommonResponse> getUserList() {
+        try {
             List<AdminUserResponse> response = userService.getUserList();
             return getResponseEntity(response, "회원 전체 조회 성공");
         } catch (Exception e) {
@@ -162,7 +163,7 @@ public class UserController {
             @PathVariable Long userId,
             @Valid @RequestBody AdminUpdateUserRequest request
     ) {
-        try{
+        try {
             AdminUserResponse response = userService.updateUser(request, userId);
             return getResponseEntity(response, "회원 전체 조회 성공");
         } catch (Exception e) {
@@ -171,7 +172,13 @@ public class UserController {
     }
 
     @GetMapping("/{userId}/profile")
-    public UserResponseDTO getProfile(@PathVariable Long userId) {
-        return userService.getProfile(userId);
+    public ResponseEntity<CommonResponse> getProfile(@PathVariable Long userId) {
+        UserProfileDTO userProfileDTO = userService.getProfile(userId);
+        CommonResponse response = CommonResponse.builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("프로필 조회 성공")
+                .data(userProfileDTO)
+                .build();
+        return ResponseEntity.ok(response);
     }
-} // 3
+}// 3

@@ -196,13 +196,13 @@ public class UserService {
      * 프로필 조회시 응답필드 게시글 & 댓글 필드 추가
      */
 
-    public UserResponseDTO getProfile(Long userId) {
+    public UserProfileDTO getProfile(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다.")
         );
         UserResponseDTO response = new UserResponseDTO(user);
-        response.setLikedPostsCount(likesRepository.countByUserAndStatusAndContentType(user, LikeStatus.LIKED, ContentType.PRODUCT));
-        response.setLikedCommentsCount(likesRepository.countByUserAndStatusAndContentType(user, LikeStatus.LIKED, ContentType.COMMENT));
-        return response;
-    } // 3 커밋 테스트2
+        long likedPostsCount = likesRepository.countByUserAndStatusAndContentType(user, LikeStatus.LIKED, ContentType.PRODUCT);
+        long likedCommentsCount = likesRepository.countByUserAndStatusAndContentType(user, LikeStatus.LIKED, ContentType.COMMENT);
+        return new UserProfileDTO(response,likedPostsCount,likedCommentsCount);
+    } // 3
 }
